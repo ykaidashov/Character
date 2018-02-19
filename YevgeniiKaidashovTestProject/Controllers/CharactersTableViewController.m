@@ -11,7 +11,7 @@
 
 @interface CharactersTableViewController ()
 
-@property (strong, nonatomic) NSArray *characters;
+@property (strong, nonatomic) NSDictionary *characters;
 
 @end
 
@@ -37,56 +37,31 @@
     }];
 }
 
-- (NSArray *)prepareData:(NSString *)text {
-    
-    NSMutableArray *tempArray = [NSMutableArray array];
-    
-    while ([text length] > 0) {
-        
-        NSString *character = [text substringToIndex:1];
-        
-        int count = (int)[self numberOfCharacter:character inString:text];
-        
-        if (count > 0) {
-            NSNumber *numberOfCharacter = [NSNumber numberWithInt:count];
-            
-            if ([character isEqualToString:@" "]) {
-                [tempArray addObject:[NSDictionary dictionaryWithObject:numberOfCharacter forKey:@"space"]];
-            } else {
-                [tempArray addObject:[NSDictionary dictionaryWithObject:numberOfCharacter forKey:character]];
-            }
-            
-            
-        }
-        
-        text = [text stringByReplacingOccurrencesOfString:character withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, text.length)];
-    }
-    
-    return tempArray;
-}
+- (NSDictionary *)prepareData:(NSString *)text {
 
-- (NSInteger)numberOfCharacter:(NSString *)character inString:(NSString *)text {
-    NSRange search = NSMakeRange(0, text.length);
-    NSInteger counter = 0;
+    NSMutableDictionary *tempDictionary = [NSMutableDictionary dictionary];
     
-    while (YES) {
-        NSRange range = [text rangeOfString:character options:NSCaseInsensitiveSearch range:search];
+    for (int i = 0; i < text.length; i++) {
+        NSString *character = [text substringWithRange:NSMakeRange(i, 1)];
+        NSRange range = [text rangeOfString:character];
+        
+        if ([character isEqualToString:@" "]) {
+            character = @"space";
+        }
         
         if (range.location != NSNotFound) {
-            
-            NSInteger index = range.location + range.length;
-            
-            search.location = index;
-            search.length = (NSInteger)[text length] - index;
-            
-            counter++;
-        } else {
-            break;
+            NSNumber *number = [tempDictionary objectForKey:character];
+            if (number) {
+                int count = (int)[number integerValue];
+                [tempDictionary setObject:[NSNumber numberWithInt:(count + 1)] forKey:character];
+            } else {
+                [tempDictionary setObject:[NSNumber numberWithInt:1] forKey:character];
+            }
         }
         
     }
     
-    return counter;
+    return tempDictionary;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -116,13 +91,11 @@
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
     }
     
-    NSDictionary *tempItem  = [self.characters objectAtIndex:indexPath.row];
-    NSArray *keys = [tempItem allKeys];
+    NSString *character = [[self.characters allKeys] objectAtIndex:indexPath.row];
+    NSInteger count = [[[self.characters allValues] objectAtIndex:indexPath.row] integerValue];
     
     
-    if ([keys count] > 0) {
-        NSString *character = [keys firstObject];
-        NSInteger count = [[tempItem objectForKey:[keys firstObject]] integerValue];
+    if (count > 0) {
         cell.textLabel.text = [NSString stringWithFormat:@"%@ - %ld %@", character, count, (count > 1) ? @"times" : @"time"];
     }
     
