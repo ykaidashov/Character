@@ -11,7 +11,8 @@
 
 @interface CharactersTableViewController ()
 
-@property (strong, nonatomic) NSDictionary *characters;
+@property (strong, nonatomic) NSCountedSet *countedSet;
+@property (strong, nonatomic) NSArray *characters;
 
 @end
 
@@ -37,31 +38,24 @@
     }];
 }
 
-- (NSDictionary *)prepareData:(NSString *)text {
-
-    NSMutableDictionary *tempDictionary = [NSMutableDictionary dictionary];
+- (NSArray *)prepareData:(NSString *)text {
+    
+    NSCountedSet *countedSet = [NSCountedSet set];
     
     for (int i = 0; i < text.length; i++) {
         NSString *character = [text substringWithRange:NSMakeRange(i, 1)];
-        NSRange range = [text rangeOfString:character];
         
         if ([character isEqualToString:@" "]) {
             character = @"space";
         }
         
-        if (range.location != NSNotFound) {
-            NSNumber *number = [tempDictionary objectForKey:character];
-            if (number) {
-                int count = (int)[number integerValue];
-                [tempDictionary setObject:[NSNumber numberWithInt:(count + 1)] forKey:character];
-            } else {
-                [tempDictionary setObject:[NSNumber numberWithInt:1] forKey:character];
-            }
-        }
+        [countedSet addObject:character];
         
     }
     
-    return tempDictionary;
+    self.countedSet = countedSet;
+    
+    return [countedSet allObjects];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -91,10 +85,9 @@
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
     }
     
-    NSString *character = [[self.characters allKeys] objectAtIndex:indexPath.row];
-    NSInteger count = [[[self.characters allValues] objectAtIndex:indexPath.row] integerValue];
-    
-    
+    NSString *character = [self.characters objectAtIndex:indexPath.row];
+    NSInteger count = [self.countedSet countForObject:character];
+
     if (count > 0) {
         cell.textLabel.text = [NSString stringWithFormat:@"%@ - %ld %@", character, count, (count > 1) ? @"times" : @"time"];
     }
